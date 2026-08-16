@@ -1,0 +1,59 @@
+[Include:Stockgroupwise Report.txt]
+;[Include:Stockitemwise Report.txt] 
+
+
+[Collection: StockSummaryColl]
+	Type: Vouchers: VoucherType
+	Child Of: $$VchTypeSales
+	Belongs To: Yes
+	Fetch: VoucherNumber, Date, PartyLedgerName
+	
+[Collection:StockSummaryColl2]
+	Source Collection:StockSummaryColl
+	Walk: AllInventoryEntries
+	by: VChno			: $VoucherNumber
+	by: Dt				: $Date
+	Compute: Masterid: $Masterid
+;	By: StockitemNm		: $StockitemName
+	By: PartyLedgerNm	: $PartyLedgerName
+	by: partyGrpname	: $Parent:Ledger:$PartyLedgerName
+	by: Grpname			: $Parent:Stockitem:$StockitemName
+	Aggr Compute: BillQty: Sum	: $BilledQty
+	Aggr Compute: BillAmt: Sum	: $Amount
+	Filter: GrpnameFilt, PartyGrpfilt, Partyfilt
+;	Option: GRpfiltcoll: $Grpname=$$SysName:Primary 
+	option: PartyfiltCOll : #ChoosePartyledger=$$SysName:Allitems
+;	Option: bothfilt: $Grpname!=$$SysName:Primary or  $PartyLedgerNm!=$$SysName:Allitems
+;	
+	[!Collection:GRpfiltcoll]
+		Delete: Filter: Partyfilt
+;	Option: StockSummaryStkitemwiaeColl2: ##varStkitem
+	[!Collection:PartyfiltCOll]
+		delete: Filter: Partyfilt
+		
+	[!Collection:bothfilt]
+		Filter: GrpnameFilt, Partyfilt
+	
+[System:Formula]
+	GrpnameFilt		: $Grpname=#ChooseGRop 
+	Partyfilt		: $PartyLedgerNm=#ChoosePartyledger
+	StkitemnameFilt	: $StockitemNm=#ChooseStkitemwise
+	PartyGrpfilt	: $partyGrpname=#ChoosePartyGrp
+	
+
+[!Collection:StockSummaryStkitemwiaeColl2]
+	Source Collection:StockSummaryColl
+	Walk: AllInventoryEntries
+	by: VChno			: $VoucherNumber
+	by: Dt				: $Date
+	Compute: Masterid: $Masterid
+	By: StockitemNm		: $StockitemName
+	By: PartyLedgerNm	: $PartyLedgerName
+	Aggr Compute: BillQty: Sum	: $BilledQty
+	Aggr Compute: BillAmt: Sum	: $Amount
+	Filter: StkitemnameFilt
+
+	
+	
+; Select $VChno,$Dt, $StockitemNm,$Grpname,$BillQty, $BillAmt, $StockitemNm   from StockSummaryColl2
+

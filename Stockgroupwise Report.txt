@@ -1,0 +1,307 @@
+[#Menu:Gateway of Tally]
+	Add		:  Item	: Before: @@locQuit : Stk groupwise/Partywise : Alter : ChooseGRop 
+
+[System:Variable]
+	varStkitem: NO
+	
+[Variable:varStkitem]
+	Type: Logical
+	
+
+[Report:ChooseGRop]
+	Form: ChooseGRop
+	Variable: varStkitem
+	Set: varStkitem: No
+	
+	[Form:ChooseGRop]
+		Part:ChooseGRop
+		
+		On: form Accept: (Not $$IsEmpty:#ChooseGRop) : Display : Stkgrowise Part1
+		On: form Accept: Yes: Form Accept
+		
+
+		[Part:ChooseGRop]
+			Line:ChooseGRop, ChoosePartyGrp, ChoosePartyledger
+			
+			[Line:ChooseGRop]
+				Field: Long Prompt, ChooseGRop
+				Local: Field: Long Prompt: Set as	: "Choose Group Name"
+				Local: Field: Long Prompt: Width	: 22
+				
+				[Field:ChooseGRop]
+					Use			: NAme Field
+					Storage		: ChooseGRopUSF
+					Table		: ChooseGRopColl, Primary
+					Show Table	: Always
+					Set Always	: Yes
+;					Sub Form: Stkgrowise Part1: Not $$IsEmpty:#ChooseGRop
+
+		[Line:ChoosePartyGrp]
+				Field: Long Prompt, ChoosePartyGrp
+				Local: Field: Long Prompt: Set as: "Choose Party Group"
+				Local: Field: Long Prompt: Width	: 22
+				
+				[Field:ChoosePartyGrp]
+					Use			: NAme Field
+					Storage		: ChoosePartygrpUDF
+					Table		: ChoosePartygrpColl ;, Allitems
+					Show Table	: Always
+					Set Always	: Yes
+					
+		[Line:ChoosePartyledger]
+				Field: Long Prompt, ChoosePartyledger
+				Local: Field: Long Prompt: Set as: "Choose Party Name"
+				Local: Field: Long Prompt: Width	: 22
+				
+				[Field:ChoosePartyledger]
+					Use			: NAme Field
+					Storage		: ChoosePartyUDF
+					Table		: ChoosePartyColl, Allitems
+					Show Table	: Always
+					Set Always	: Yes
+					
+[System:UDF]
+	ChooseGRopUDF		: String: 20055
+	ChoosePartygrpUDF	: String: 20058
+	ChoosePartyUDF		: String: 20065
+
+[Collection:ChooseGRopColl]
+	Type: StockGroup
+	Fetch: Name, Parent
+	Belongs To: Yes
+	Format: $Name, 20
+;	Filter: parentPRimFilt
+	
+[Collection: ChoosePartyColl]
+	Type: Ledger
+	Child Of: #ChoosePartyGrp ;$$GroupSundryDebtors
+	Belongs To: Yes
+	Fetch: Name
+	Format: $Name, 20
+
+[Collection: ChoosePartygrpColl]
+	Type: Group
+	Child Of: $$GroupSundryDebtors
+	Belongs To: Yes
+	Fetch: Name
+	Format: $Name, 20	
+	
+[System:Formula]
+	parentPRimFilt: $Parent=$$SysName:Primary
+	
+[Report: Stkgrowise Part1]
+	Object: Voucher
+
+;	Use		: DSP Template
+	Form	: Stkgrowise Part1
+	Title	: "Stock Groupwise Partywise Report"
+	;Empty:$$Machinedate>=$$Date:"04-09-2018"
+	
+	Variables   : SV CurrentCompany, SV FromDate, SV ToDate
+	
+;	Set:SV FromDate  : ##SVCurrentDate
+;	Set:SV ToDate   : ##SVCurrentDate
+	
+	[Form: Stkgrowise Part1]
+
+;	Set:SV FromDate  : ##SVCurrentDate
+;	Set:SV ToDate   : ##SVCurrentDate
+;		Use		: DSP Template
+		Parts	: Stkgrowise PartHeader1 , Stkgrowise Part1
+;		Width	: 80% Screen
+;		Height	: 80% Screen
+		Buttons:PrintButton, Export ButtonNEw, StockgrpPartyButton
+		Buttons:ExplodeFlag, F2ChangePeriod
+		Space Left	: 1.5 ;0.5
+		Space Right: 1.5 ;0.5
+	;	Delete	: Buttons			: ExplodeFlag
+	;	Delete	: Bottom Buttons	: DSPAutoColumns, BudgetAnalysis, ReportConfig
+			;Empty:$$Machinedate>=$$Date:"24-01-2020"
+[Button:StockgrpPartyButton]
+	Key   		: Alt + S
+    Title 		: $$LocaleString:"Stkgrp/Party"
+	Action		: Alter: ChooseGRop 
+	Width		:  7.3% Screen
+	Key Vertical Align	: Centre
+	
+[Key: ExportButtonNEw]
+	Key   		: Alt + X
+    Title 		: $$LocaleString:"Export"
+	Action		: Export: StkgrowisePart1
+	Width		:  7.3% Screen
+	Key Vertical Align	: Centre
+	
+
+		[Part: Stkgrowise PartHeader1]
+			Lines	: StkgrowiseCmpName, Stkgrowise CMAdd, Stkgrowise PartHeader1, Stkgrowise PartHeader2
+			Repeat	: Stkgrowise CMAdd: Company Address
+			;Border	: Thin Top left right
+
+			[Line: StkgrowiseCmpName]
+				Field       : Name Field
+				Local       : Field : Name Field	: Set as   	: $$LocaleString:@@CMpmailName
+				Local       : Field : Name Field	: Full Width: Yes
+				Local       : Field : Name Field	: Align		: Center
+				Local       : Field : Name Field 	: Style    	: Normal Bold
+				Local       : Field : Name Field 	: Skip		: Yes
+				Space Bottom: 0.2
+				
+			[Line: Stkgrowise CMAdd]
+				Field       : Name Field
+				Local       : Field : Name Field	: Set as   	: $Address
+				Local       : Field : Name Field	: Full Width: Yes
+				Local       : Field : Name Field	: Align		: Center
+				Local       : Field : Name Field 	: Style    	: Normal
+				Local       : Field : Name Field 	: Skip		: Yes
+				
+			[Line: Stkgrowise PartHeader1]
+				Field       : Name Field
+				Local       : Field : Name Field	: Set as   	: $$LocaleString:"Stock Groupwise Partywise"
+				Local       : Field : Name Field	: Full Width: Yes
+				Local       : Field : Name Field	: Align		: Center
+				Local       : Field : Name Field 	: Style    	: Normal Bold
+				Local       : Field : Name Field 	: Skip		: Yes
+				Space Top	: 0.5
+				Space Bottom: 0.5
+
+			[Line: Stkgrowise PartHeader2]
+
+				Field       : Name Field
+				Right Field : DSP MainDateTitle
+				Local       : Field : Name Field	: Set as   	: $$LocaleString:"Bill-wise Stock Group Wise Sales Report"
+				Local       : Field : Name Field	: Full Width: Yes
+				Local       : Field : Name Field 	: Style    	: Normal Bold
+				Local       : Field : Name Field 	: Skip		: Yes
+				Space Bottom: 0.5
+		
+[Part: Stkgrowise Part1]
+
+	Lines			: Stkgrowise tit1, Stkgrowise Body
+	Bottom Line		: Stkgrowise tot1
+
+	Repeat			: Stkgrowise Body	: StockSummaryColl2
+	Total			: StkgrowiseBillQty, StkgrowiseAmount
+
+	Scrolled		: Vertical
+	Common Borders	: Yes
+	Border			: Thin Bottom
+	Float			: No
+	Border			: thin Left
+
+
+	[Line: Stkgrowise tit1]
+	
+		Use		: Stkgrowise Body
+		Local	: Field	: Default			: Type		: String
+		Local	: Field	: Default			: Lines		: 0
+		Local	: Field	: Default			: Style		: Normal Bold
+		
+		Local	: Field	: Default			: Delete	: Inactive
+
+
+		Local	: Field	: Stkgrowise BillNo				: Set as	: "Bill No"
+		Local	: Field	: Stkgrowise BillDate			: Set as	: "Bill Date"
+		Local	: Field	: Stkgrowise PartyNm			: Set as	: "Party Name"
+		Local	: Field	: Stkgrowise GrpNm				: Set as	: "Group Name"
+		Local	: Field	: Stkgrowise BillQty			: Set as	: "Billed Qty"	
+		Local	: Field	: Stkgrowise Amount				: Set as	: "Amount"
+		
+
+		Border	: Thin Column Titles
+		
+	[Line: Stkgrowise Body]
+	
+		Fields			: Stkgrowise Masterid, Stkgrowise BillNo,Stkgrowise BillDate, Stkgrowise PartyNm, +
+							Stkgrowise GrpNm,Stkgrowise BillQty,  Stkgrowise Amount							
+		Local	: Field	: Default		: Style		: Normal
+		
+		Option: Stkitemwise Body1: ##varStkitem
+		
+		Key	: enter2
+
+					[key:enter2]
+						 Key	:	Alt+Enter
+						 Action	:Alter	: custrepor22
+						 
+					[Report:custrepor22]
+						 Use: voucher
+						 Object: voucher:$$SPrintf:@@VchMasterID:#StkgrowiseMasterid 
+						Form: custrepor22
+						
+					[Form:custrepor22]
+						Use: voucher
+						
+		[!Line:Stkitemwise Body1]
+			Local: Field: Stkgrowise GrpNm: delete: Set as
+			Local: Field: Stkgrowise GrpNm: Add: Set as: $StockitemNm
+
+				[Field:Stkgrowise Masterid]
+					Use			: name field;Rate Field
+					Style		: Normal
+					Set as		: $Masterid
+					Border		: thin left
+					Width		: 18
+					Invisible	: Yes
+					
+				[Field:Stkgrowise BillNo]
+					Use			: NAme Field
+					Set as		: $VChno
+					Border		: Thin Left
+					Width		: 10
+;					Align		: Center
+					
+				[Field:Stkgrowise BillDate]
+					Use			: NAme Field
+					Set as		: $Dt
+					Border		: Thin Left
+					Width		: 10
+;					Align		: Center
+					
+				[Field: Stkgrowise PartyNm]
+					Use			: NAme Field
+					Set as		: $PartyLedgerNm
+					Border		: Thin Left
+					Width		: 30
+					Full Width	: Yes
+;					Align		: Center
+					
+				[Field:Stkgrowise GrpNm]
+					Use			: NAme Field
+					Set as		: $Grpname
+					Border		: Thin Left
+					Width		: 20
+;					Full Width	: Yes
+;					Align		: Center
+					
+				[Field:Stkgrowise BillQty]
+					Use			: Qty Field
+					Set as		: $BillQty
+					Border		: Thin Left
+					Width		: 12
+					
+				[Field: Stkgrowise Amount]
+					Use			: Amount Field
+					Set as		: $BillAmt
+					Border		: Thin  Left right
+					Width		: 15
+
+	[Line: Stkgrowise tot1]
+	
+		Use		: Stkgrowise Body
+;		Local	: Field	: Default			: Type		: String
+;		Local	: Field	: Default			: Lines		: 0
+		Local	: Field	: Default			: Style		: Normal Bold
+		
+		Local	: Field	: Default			: Delete	: Inactive
+
+
+		Local	: Field	: Stkgrowise BillNo				: Set as	: ""
+		Local	: Field	: Stkgrowise BillDate			: Set as	: ""
+		Local	: Field	: Stkgrowise PartyNm			: Set as	: ""
+		Local	: Field	: Stkgrowise GrpNm				: Set as	: "Total"
+		Local	: Field	: Stkgrowise BillQty			: Set as	: $$Total:StkgrowiseBillQty 
+		Local	: Field	: Stkgrowise Amount				: Set as	: $$Total:StkgrowiseAmount	
+		
+
+		Border	: Thin Column Titles
+		
